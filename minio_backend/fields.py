@@ -40,13 +40,19 @@ class S3File(fields.text):
                 value = None
             else:
                 key = '{}_filename'.format(name)
-                if oid and key in context and oid != context[key]:
-                    client.remove_object(self.bucket, oid)
-                    filename = self.get_filename(obj, rid, context[key])
-                elif not oid and key in context:
-                    filename = self.get_filename(obj, rid, context[key])
+                ctx_filename = context.get(key)
+                if oid:
+                    filename = oid
+                    if ctx_filename:
+                        if oid != ctx_filename:
+                            client.remove_object(self.bucket, oid)
+                        filename = self.get_filename(obj, rid, ctx_filename)
                 else:
-                    filename = self.get_filename(obj, rid, name)
+                    if ctx_filename:
+                        filename = self.get_filename(obj, rid, ctx_filename)
+                    else:
+                        filename = self.get_filename(obj, rid, name)
+
                 content = base64.b64decode(value)
                 length = len(content)
                 content = BytesIO(content)
@@ -65,9 +71,8 @@ class S3File(fields.text):
             client.make_bucket(self.bucket)
         res = self.get_oids(cursor, obj, ids, name)
         for rid, oid in res.items():
-            filename = self.get_filename(obj, rid, name)
             if oid:
-                response = client.get_object(self.bucket, filename)
+                response = client.get_object(self.bucket, oid)
                 try:
                     val = response.data
                     if context.get('bin_size', False) and val:

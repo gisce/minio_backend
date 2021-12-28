@@ -1,6 +1,8 @@
 from destral import testing
 from osv import osv, fields
 from minio_backend.fields import S3File
+from minio_backend.minio_backend import get_minio_client
+from minio.error import NoSuchKey
 import base64
 
 
@@ -44,3 +46,28 @@ class TestMinioBackend(testing.OOTestCaseWithCursor):
 
         result = obj.read(cursor, uid, obj_id, ['file'])
         self.assertEqual(result['file'], base64.b64encode("TEST"))
+
+    def test_remove_on_minio(self):
+        cursor = self.cursor
+        uid = self.uid
+        MiniModel()
+        osv.class_pool['minio.model'].createInstance(
+            self.openerp.pool, 'minio_backend', cursor
+        )
+        obj = self.openerp.pool.get('minio.model')
+        obj._auto_init(cursor)
+
+        obj_id = obj.create(cursor, uid, {
+            'name': 'Foo',
+            'file': base64.b64encode("TEST")
+        })
+
+        obj.write(cursor, uid, [obj_id], {'file': False})
+        self.assertEqual(
+            obj.read(cursor, uid, obj_id)['file'],
+            False
+        )
+        client = get_minio_client()
+        path = '{}_file'.format(obj_id)
+        with self.assertRaises(NoSuchKey):
+            client.get_object('test', path)

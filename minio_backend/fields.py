@@ -34,11 +34,15 @@ class S3File(fields.text):
             client.make_bucket(self.bucket)
         for rid, oid in self.get_oids(cursor, obj, [rid], name).items():
             filename = self.get_filename(obj, rid, name)
-            content = base64.b64decode(value)
-            length = len(content)
-            content = BytesIO(content)
-            client.put_object(self.bucket, filename, content, length=length)
-            value = filename
+            if not value and oid:
+                client.remove_object(self.bucket, filename)
+                value = None
+            else:
+                content = base64.b64decode(value)
+                length = len(content)
+                content = BytesIO(content)
+                client.put_object(self.bucket, filename, content, length=length)
+                value = filename
             return super(S3File, self).set(
                 cursor, obj, rid, name, value, user, context
             )

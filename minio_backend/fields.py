@@ -25,11 +25,8 @@ class S3File(fields.text):
         res = dict([(x[0], x[1]) for x in cursor.fetchall()])
         return res
 
-    def get_filename(self, obj, rid, name, context=None):
-        if context is None:
-            context = {}
-        key = '{}_filename'.format(name)
-        return '%s/%s_%s' % (obj._table, rid, context.get(key, name))
+    def get_filename(self, obj, rid, name):
+        return '%s/%s_%s' % (obj._table, rid, name)
 
     def set(self, cursor, obj, rid, name, value, user=None, context=None):
         if context is None:
@@ -42,9 +39,14 @@ class S3File(fields.text):
                 client.remove_object(self.bucket, oid)
                 value = None
             else:
-                filename = self.get_filename(obj, rid, name, context)
-                if oid and oid != filename:
+                key = '{}_filename'.format(name)
+                if oid and key in context and oid != context[key]:
                     client.remove_object(self.bucket, oid)
+                    filename = self.get_filename(obj, rid, context[key])
+                elif not oid and key in context:
+                    filename = self.get_filename(obj, rid, context[key])
+                else:
+                    filename = self.get_filename(obj, rid, name)
                 content = base64.b64decode(value)
                 length = len(content)
                 content = BytesIO(content)

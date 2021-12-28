@@ -4,6 +4,7 @@ from tools import human_size
 import base64
 from io import BytesIO
 from .minio_backend import get_minio_client
+import magic
 
 
 class S3File(fields.text):
@@ -55,8 +56,12 @@ class S3File(fields.text):
 
                 content = base64.b64decode(value)
                 length = len(content)
+                content_type = magic.from_buffer(content, mime=True)
                 content = BytesIO(content)
-                client.put_object(self.bucket, filename, content, length=length)
+                client.put_object(
+                    self.bucket, filename, content, length=length,
+                    content_type=content_type
+                )
                 value = filename
             return super(S3File, self).set(
                 cursor, obj, rid, name, value, user, context

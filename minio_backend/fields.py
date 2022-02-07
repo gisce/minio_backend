@@ -39,7 +39,7 @@ class S3File(fields.text):
             if not value and oid:
                 client.remove_object(self.bucket, oid)
                 value = None
-            else:
+            elif value:
                 key = '{}_filename'.format(name)
                 ctx_filename = context.get(key)
                 if oid:

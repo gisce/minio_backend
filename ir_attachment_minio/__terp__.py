@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     "name": "ir_attachment_minio",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "depends": ["base", "minio_backend"],
     "author": "GISCE-TI, S.L",
     "category": "Storage",

@@ -4,7 +4,7 @@
   "description": """Aquest mòdul afegeix les següents funcionalitats:
   * Minio File Storage
 """,
-  "version": "0.2.0",
+  "version": "0.2.1",
   "author": "GISCE",
   "category": "Storage",
   "depends": [

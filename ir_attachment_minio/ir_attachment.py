@@ -2,6 +2,7 @@
 from __future__ import absolute_import
 from osv import osv
 from minio_backend.fields import S3File
+from slugify import slugify
 
 
 def minioize(vals):
@@ -22,8 +23,14 @@ class IrAttachment(osv.osv):
         if context is None:
             context = {}
         ctx = context.copy()
-        if 'filename' in vals:
-            ctx['datas_minio_filename'] = vals['filename']
+        if 'datas_fname' in vals:
+            ctx['datas_minio_filename'] = slugify(
+                vals['datas_fname'], replacements=[['.', '.']]
+            )
+        elif 'filename' in vals:
+            ctx['datas_minio_filename'] = slugify(
+                vals['filename'], replacements=[['.', '.']]
+            )
         if 'datas' in vals and vals['datas']:
             minioize(vals)
 
@@ -36,8 +43,14 @@ class IrAttachment(osv.osv):
         ctx = context.copy()
         if 'datas' in vals:
             minioize(vals)
-        if 'filename' in vals:
-            ctx['datas_minio_filename'] = vals['filename']
+        if 'datas_fname' in vals:
+            ctx['datas_minio_filename'] = slugify(
+                vals['datas_fname'], replacements=[['.', '.']]
+            )
+        elif 'filename' in vals:
+            ctx['datas_minio_filename'] = slugify(
+                vals['filename'], replacements=[['.', '.']]
+            )
         ctx['subfolder'] = ctx.get('default_res_model')
         return super(
             IrAttachment, self).write(cursor, uid, ids, vals, context=ctx

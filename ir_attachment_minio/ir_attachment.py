@@ -19,6 +19,13 @@ class IrAttachment(osv.osv):
     _name = 'ir.attachment'
     _inherit = 'ir.attachment'
 
+    def get_subfolder(self, vals, context):
+        subfolder = context.get(
+            'default_res_model',
+            vals.get('res_model', None)
+        )
+        return subfolder
+
     def create(self, cursor, uid, vals, context=None):
         if context is None:
             context = {}
@@ -33,8 +40,7 @@ class IrAttachment(osv.osv):
             )
         if 'datas' in vals and vals['datas']:
             minioize(vals)
-
-        ctx['subfolder'] = ctx.get('default_res_model')
+        ctx['subfolder'] = self.get_subfolder(vals, context)
         return super(IrAttachment, self).create(cursor, uid, vals, context=ctx)
 
     def write(self, cursor, uid, ids, vals, context=None):
@@ -51,7 +57,7 @@ class IrAttachment(osv.osv):
             ctx['datas_minio_filename'] = slugify(
                 vals['filename'], separator='.'
             )
-        ctx['subfolder'] = ctx.get('default_res_model')
+        ctx['subfolder'] = self.get_subfolder(vals, context)
         return super(
             IrAttachment, self).write(cursor, uid, ids, vals, context=ctx
         )

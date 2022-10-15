@@ -26,6 +26,8 @@ class IrAttachment(osv.osv):
             ctx['datas_minio_filename'] = vals['filename']
         if 'datas' in vals and vals['datas']:
             minioize(vals)
+
+        ctx['subfolder'] = ctx.get('default_res_model')
         return super(IrAttachment, self).create(cursor, uid, vals, context=ctx)
 
     def write(self, cursor, uid, ids, vals, context=None):
@@ -36,6 +38,7 @@ class IrAttachment(osv.osv):
             minioize(vals)
         if 'filename' in vals:
             ctx['datas_minio_filename'] = vals['filename']
+        ctx['subfolder'] = ctx.get('default_res_model')
         return super(
             IrAttachment, self).write(cursor, uid, ids, vals, context=ctx
         )

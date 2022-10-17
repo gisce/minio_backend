@@ -14,8 +14,9 @@ class S3File(fields.text):
     _classic_write = False
     pg_type = 'text', 'text'
 
-    def __init__(self, string, bucket, **args):
+    def __init__(self, string, bucket, subfolder='', **args):
         self.bucket = bucket
+        self.subfolder = subfolder
         super(S3File, self).__init__(
             string=string, widget='binary', **args
         )
@@ -29,9 +30,10 @@ class S3File(fields.text):
     def get_filename(self, obj, rid, name, context=None):
         if context is None:
             context = {}
-        if context.get('subfolder'):
+        subfolder = context.get('subfolder', self.subfolder)
+        if subfolder:
             return '{}/{}/{}_{}'.format(
-                obj._table, context['subfolder'], rid, name)
+                obj._table, subfolder, rid, name)
         return '{}/{}_{}'.format(obj._table, rid, name)
 
     def set(self, cursor, obj, rid, name, value, user=None, context=None):

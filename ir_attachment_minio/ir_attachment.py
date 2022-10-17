@@ -34,10 +34,6 @@ class IrAttachment(osv.osv):
             ctx['datas_minio_filename'] = slugify(
                 vals['datas_fname'], separator='.'
             )
-        elif 'filename' in vals:
-            ctx['datas_minio_filename'] = slugify(
-                vals['filename'], separator='.'
-            )
         if 'datas' in vals and vals['datas']:
             minioize(vals)
         ctx['subfolder'] = self.get_subfolder(vals, context)
@@ -52,10 +48,6 @@ class IrAttachment(osv.osv):
         if 'datas_fname' in vals:
             ctx['datas_minio_filename'] = slugify(
                 vals['datas_fname'], separator='.'
-            )
-        elif 'filename' in vals:
-            ctx['datas_minio_filename'] = slugify(
-                vals['filename'], separator='.'
             )
         ctx['subfolder'] = self.get_subfolder(vals, context)
         return super(

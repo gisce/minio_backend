@@ -14,8 +14,9 @@ class S3File(fields.text):
     _classic_write = False
     pg_type = 'text', 'text'
 
-    def __init__(self, string, bucket, **args):
+    def __init__(self, string, bucket, subfolder='', **args):
         self.bucket = bucket
+        self.subfolder = subfolder
         super(S3File, self).__init__(
             string=string, widget='binary', **args
         )
@@ -26,8 +27,14 @@ class S3File(fields.text):
         res = dict([(x[0], x[1]) for x in cursor.fetchall()])
         return res
 
-    def get_filename(self, obj, rid, name):
-        return '%s/%s_%s' % (obj._table, rid, name)
+    def get_filename(self, obj, rid, name, context=None):
+        if context is None:
+            context = {}
+        subfolder = context.get('subfolder', self.subfolder)
+        if subfolder:
+            return '{}/{}/{}_{}'.format(
+                obj._table, subfolder, rid, name)
+        return '{}/{}_{}'.format(obj._table, rid, name)
 
     def set(self, cursor, obj, rid, name, value, user=None, context=None):
         if context is None:
@@ -47,12 +54,15 @@ class S3File(fields.text):
                     if ctx_filename:
                         if oid != ctx_filename:
                             client.remove_object(self.bucket, oid)
-                        filename = self.get_filename(obj, rid, ctx_filename)
+                        filename = self.get_filename(
+                            obj, rid, ctx_filename, context=context)
                 else:
                     if ctx_filename:
-                        filename = self.get_filename(obj, rid, ctx_filename)
+                        filename = self.get_filename(
+                            obj, rid, ctx_filename, context=context)
                     else:
-                        filename = self.get_filename(obj, rid, name)
+                        filename = self.get_filename(
+                            obj, rid, name, context=context)
 
                 content = base64.b64decode(value)
                 length = len(content)

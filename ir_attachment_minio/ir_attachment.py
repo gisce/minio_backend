@@ -2,6 +2,7 @@
 from __future__ import absolute_import
 from osv import osv
 from minio_backend.fields import S3File
+from slugify import slugify
 
 
 def minioize(vals):
@@ -18,14 +19,24 @@ class IrAttachment(osv.osv):
     _name = 'ir.attachment'
     _inherit = 'ir.attachment'
 
+    def get_subfolder(self, vals, context):
+        subfolder = context.get(
+            'default_res_model',
+            vals.get('res_model', None)
+        )
+        return subfolder
+
     def create(self, cursor, uid, vals, context=None):
         if context is None:
             context = {}
         ctx = context.copy()
-        if 'filename' in vals:
-            ctx['datas_minio_filename'] = vals['filename']
+        if 'datas_fname' in vals:
+            ctx['datas_minio_filename'] = slugify(
+                vals['datas_fname'], separator='.'
+            )
         if 'datas' in vals and vals['datas']:
             minioize(vals)
+        ctx['subfolder'] = self.get_subfolder(vals, context)
         return super(IrAttachment, self).create(cursor, uid, vals, context=ctx)
 
     def write(self, cursor, uid, ids, vals, context=None):
@@ -34,8 +45,11 @@ class IrAttachment(osv.osv):
         ctx = context.copy()
         if 'datas' in vals:
             minioize(vals)
-        if 'filename' in vals:
-            ctx['datas_minio_filename'] = vals['filename']
+        if 'datas_fname' in vals:
+            ctx['datas_minio_filename'] = slugify(
+                vals['datas_fname'], separator='.'
+            )
+        ctx['subfolder'] = self.get_subfolder(vals, context)
         return super(
             IrAttachment, self).write(cursor, uid, ids, vals, context=ctx
         )

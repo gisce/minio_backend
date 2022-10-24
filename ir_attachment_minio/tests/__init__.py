@@ -15,7 +15,7 @@ class TestIrAttachmentMinio(testing.OOTestCaseWithCursor):
 
         attach_id = attach_obj.create(cursor, uid, {
             'name': 'This is a description',
-            'filename': 'test.txt',
+            'datas_fname': 'test.txt',
             'datas': base64.b64encode(content)
         })
 
@@ -37,7 +37,7 @@ class TestIrAttachmentMinio(testing.OOTestCaseWithCursor):
 
         attach_id = attach_obj.create(cursor, uid, {
             'name': 'This is a description',
-            'filename': 'test2.txt',
+            'datas_fname': 'test2.txt',
             'datas': base64.b64encode(content)
         })
 
@@ -65,7 +65,7 @@ class TestIrAttachmentMinio(testing.OOTestCaseWithCursor):
 
         attach_id = attach_obj.create(cursor, uid, {
             'name': 'This is a description',
-            'filename': 'test.txt',
+            'datas_fname': 'test.txt',
             'datas': base64.b64encode(content)
         })
 
@@ -86,7 +86,7 @@ class TestIrAttachmentMinio(testing.OOTestCaseWithCursor):
 
         attach_id = attach_obj.create(cursor, uid, {
             'name': 'This is a description',
-            'filename': 'test.txt',
+            'datas_fname': 'test.txt',
             'datas': base64.b64encode(content)
         })
 

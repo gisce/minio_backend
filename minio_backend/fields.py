@@ -5,6 +5,7 @@ import base64
 from io import BytesIO
 from .minio_backend import get_minio_client
 import magic
+from slugify import slugify
 
 
 class S3File(fields.text):
@@ -15,7 +16,7 @@ class S3File(fields.text):
     pg_type = 'text', 'text'
 
     def __init__(self, string, bucket, subfolder='', **args):
-        self.bucket = bucket
+        self.bucket = slugigy(bucket)
         self.subfolder = subfolder
         super(S3File, self).__init__(
             string=string, widget='binary', **args

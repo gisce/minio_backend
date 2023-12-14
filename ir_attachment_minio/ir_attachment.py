@@ -3,6 +3,7 @@ from __future__ import absolute_import
 from osv import osv
 from minio_backend.fields import S3File
 from slugify import slugify
+from tools import config
 
 
 def minioize(vals):
@@ -75,7 +76,7 @@ class IrAttachment(osv.osv):
         return super(IrAttachment, self).unlink(cursor, uid, ids, context)
 
     _columns = {
-        'datas_minio': S3File('Minio object', 'attachments')
+        'datas_minio': S3File('Minio object', config.get('minio_bucket_attachment','attachments'))
     }
 
 

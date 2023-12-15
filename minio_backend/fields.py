@@ -16,7 +16,7 @@ class S3File(fields.text):
     pg_type = 'text', 'text'
 
     def __init__(self, string, bucket, subfolder='', **args):
-        self.bucket = slugigy(bucket)
+        self.bucket = slugify(bucket)
         self.subfolder = subfolder
         super(S3File, self).__init__(
             string=string, widget='binary', **args

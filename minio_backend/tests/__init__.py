@@ -4,6 +4,7 @@ from minio_backend.fields import S3File
 from minio_backend.minio_backend import get_minio_client
 from minio.error import NoSuchKey
 import base64
+from slugify import slugify
 
 
 class MiniModel(osv.osv):
@@ -26,6 +27,17 @@ class MiniModelSubFolder(osv.osv):
     _columns = {
         'name': fields.char('Name', size=64),
         'file': S3File('File', 'test', subfolder='foo')
+    }
+
+class MiniModelSlug(osv.osv):
+    _name = 'minio.model.slug'
+
+    def _field_create(self, cr, context=None):
+        pass
+
+    _columns = {
+        'name': fields.char('Name', size=64),
+        'file': S3File('File', 'test_to_Slugià')
     }
 
 
@@ -237,3 +249,30 @@ class TestMinioBackend(testing.OOTestCaseWithCursor):
         path = 'minio_model/{}/{}_test.txt'.format(subfolder, obj_id)
         with self.assertRaises(NoSuchKey):
             client.get_object('test', path)
+    def test_store_on_minio(self):
+        cursor = self.cursor
+        uid = self.uid
+        MiniModelSlug()
+        osv.class_pool['minio.model.slug'].createInstance(
+            self.openerp.pool, 'minio_backend', cursor
+        )
+        obj = self.openerp.pool.get('minio.model.slug')
+        obj._auto_init(cursor)
+        self.assertEqual(obj._columns['file'].bucket, slugify('test_to_Slugià'))
+
+        content = 'TEST'
+
+        obj_id = obj.create(cursor, uid, {
+            'name': 'Foo',
+            'file': base64.b64encode(content)
+        })
+
+        result = obj.read(cursor, uid, obj_id, ['file'])
+        self.assertEqual(result['file'], base64.b64encode(content))
+
+        path = 'minio_model_slug/{}_file'.format(obj_id)
+        client = get_minio_client()
+        self.assertEqual(
+            client.get_object('test', path).data,
+            content
+        )

@@ -1,4 +1,4 @@
-name: Minio Backend Tests
+name: Azure Backend Tests
 
 on:
   pull_request:
@@ -17,7 +17,7 @@ jobs:
       fail-fast: false
       matrix:
         python-version: [ "2.7", "3.11" ]
-        erp-module: [ "minio_backend", "ir_attachment_minio" ]
+        erp-module: [ "azure_backend", "ir_attachment_azure" ]
     services:
       postgres:
         image: timescale/timescaledb-ha:pg15-ts2.11-all
@@ -37,14 +37,14 @@ jobs:
         ports:
           - 127.0.0.1:6379:6379
 
-      minio:
-        image: minio
+      azurite:
+        image: mcr.microsoft.com/azure-storage/azurite
         env:
-          MINIO_ROOT_USER: minio
-          MINIO_ROOT_PASSWORD: minio123
+          AZURITE_ACCOUNTS: devstoreaccount1:password
         ports:
-          - 127.0.0.1:9000:9000
-
+          - 127.0.0.1:10000:10000
+          - 127.0.0.1:10001:10001
+          - 127.0.0.1:10002:10002
     steps:
       - name: Checkout code (minio_backend)
         uses: actions/checkout@v4
@@ -102,9 +102,7 @@ jobs:
           OPENERP_ROOT_PATH: ${{ github.workspace }}/src/erp/server/bin
           OPENERP_ADDONS_PATH: ${{ github.workspace }}/src/erp/server/bin/addons
           PYTHONPATH: ${{ github.workspace }}/src/erp/server/bin:${{ github.workspace }}/src/erp/server/bin/addons:${{ github.workspace }}/src/erp/server/sitecustomize
-          OPENERP_MINIO_ACCESS_KEY: minio
-          OPENERP_MINIO_ENDPOINT: localhost:9000
-          OPENERP_MINIO_SECRET_KEY: minio123
+          OPENERP_AZURE_CONNECTION_STRING: DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=password;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;
           OPENERP_DB_USER: erp
           OPENERP_DB_PASSWORD: erp
           OPENERP_DB_HOST: localhost
@@ -112,7 +110,7 @@ jobs:
         run: |
           destral --report-coverage --enable-coverage --report-junitxml ${{ github.workspace }}/report_tests -m ${{ matrix.erp-module }}
 
-      - name: Publish tests Results Minio
+      - name: Publish tests Results Azure
         if: (success() || failure())
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:

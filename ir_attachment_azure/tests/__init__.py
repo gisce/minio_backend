@@ -28,7 +28,7 @@ class TestIrAttachmentAzure(testing.OOTestCaseWithCursor):
         val = downloader.readall()
         self.assertEqual(val, content)
 
-    def test_write_attachment_stores_in_minio(self):
+    def test_write_attachment_stores_in_azure(self):
         cursor = self.cursor
         uid = self.uid
         pool = self.openerp.pool
@@ -57,7 +57,7 @@ class TestIrAttachmentAzure(testing.OOTestCaseWithCursor):
         val = downloader.readall()
         self.assertEqual(val, new_content)
 
-    def test_unlink_attachment_removes_file_in_minio(self):
+    def test_unlink_attachment_removes_file_in_azure(self):
         cursor = self.cursor
         uid = self.uid
         pool = self.openerp.pool
@@ -82,7 +82,7 @@ class TestIrAttachmentAzure(testing.OOTestCaseWithCursor):
         with self.assertRaises(ResourceNotFoundError) as azure_exc:
             blob_client.download_blob()
 
-    def test_read_attachment_from_minio(self):
+    def test_read_attachment_from_azure(self):
         cursor = self.cursor
         uid = self.uid
         pool = self.openerp.pool

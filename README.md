@@ -22,3 +22,27 @@ ExampleObject()
 ## API
 
 `class S3File(string, bucket)`:
+
+# Azure Blob Storage
+
+Store files into an [Azure Blob Storage](https://azure.microsoft.com/en-us/services/storage/blobs/) which is a highly scalable object storage solution from Microsoft.
+
+## Define binary columns
+
+```python
+from osv import osv, fields
+from azure_backend.fields import AzureBlobFile
+
+class ExampleObject(osv.osv):
+    _name = 'example.object'
+    _columns = {
+        'name': fields.char('Name', size=64),
+        'file': AzureBlobFile('File', 'test')
+    }
+
+ExampleObject()
+```
+
+## API
+
+`class AzureBlobFile(string, container_name)`

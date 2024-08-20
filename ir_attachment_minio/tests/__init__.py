@@ -1,3 +1,4 @@
+from __future__ import absolute_import, unicode_literals
 import base64
 from destral import testing
 from minio_backend.minio_backend import get_minio_client
@@ -11,7 +12,7 @@ class TestIrAttachmentMinio(testing.OOTestCaseWithCursor):
         pool = self.openerp.pool
         attach_obj = pool.get('ir.attachment')
 
-        content = 'THIS IS A TEST FILE!'
+        content = b'THIS IS A TEST FILE!'
 
         attach_id = attach_obj.create(cursor, uid, {
             'name': 'This is a description',
@@ -33,7 +34,7 @@ class TestIrAttachmentMinio(testing.OOTestCaseWithCursor):
         pool = self.openerp.pool
         attach_obj = pool.get('ir.attachment')
 
-        content = 'THIS IS A TEST FILE!'
+        content = b'THIS IS A TEST FILE!'
 
         attach_id = attach_obj.create(cursor, uid, {
             'name': 'This is a description',
@@ -41,7 +42,7 @@ class TestIrAttachmentMinio(testing.OOTestCaseWithCursor):
             'datas': base64.b64encode(content)
         })
 
-        new_content = 'THIS IS A MODIFIED TEST FILE!'
+        new_content = b'THIS IS A MODIFIED TEST FILE!'
 
         attach_obj.write(cursor, uid, [attach_id], {
             'datas': base64.b64encode(new_content)
@@ -61,7 +62,7 @@ class TestIrAttachmentMinio(testing.OOTestCaseWithCursor):
         pool = self.openerp.pool
         attach_obj = pool.get('ir.attachment')
 
-        content = 'THIS IS A TEST FILE!'
+        content = b'THIS IS A TEST FILE!'
 
         attach_id = attach_obj.create(cursor, uid, {
             'name': 'This is a description',
@@ -82,7 +83,7 @@ class TestIrAttachmentMinio(testing.OOTestCaseWithCursor):
         pool = self.openerp.pool
         attach_obj = pool.get('ir.attachment')
 
-        content = 'THIS IS A TEST FILE!'
+        content = b'THIS IS A TEST FILE!'
 
         attach_id = attach_obj.create(cursor, uid, {
             'name': 'This is a description',

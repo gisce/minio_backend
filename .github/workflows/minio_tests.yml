@@ -31,20 +31,22 @@ jobs:
           --health-retries 5
         ports:
           - 127.0.0.1:5432:5432
-
       redis:
         image: redis:5.0
         ports:
           - 127.0.0.1:6379:6379
-
       minio:
-        image: minio
+        image: minio/minio:latest
         env:
           MINIO_ROOT_USER: minio
           MINIO_ROOT_PASSWORD: minio123
+        options: >
+          --health-cmd="curl --silent --fail http://localhost:9000/minio/health/live || exit 1"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=3
         ports:
           - 127.0.0.1:9000:9000
-
     steps:
       - name: Checkout code (minio_backend)
         uses: actions/checkout@v4
@@ -103,7 +105,7 @@ jobs:
           OPENERP_ADDONS_PATH: ${{ github.workspace }}/src/erp/server/bin/addons
           PYTHONPATH: ${{ github.workspace }}/src/erp/server/bin:${{ github.workspace }}/src/erp/server/bin/addons:${{ github.workspace }}/src/erp/server/sitecustomize
           OPENERP_MINIO_ACCESS_KEY: minio
-          OPENERP_MINIO_ENDPOINT: localhost:9000
+          OPENERP_MINIO_ENDPOINT: 127.0.0.1:9000
           OPENERP_MINIO_SECRET_KEY: minio123
           OPENERP_DB_USER: erp
           OPENERP_DB_PASSWORD: erp

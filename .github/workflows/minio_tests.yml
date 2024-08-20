@@ -40,11 +40,11 @@ jobs:
         env:
           MINIO_ROOT_USER: minio
           MINIO_ROOT_PASSWORD: minio123
-        options: >
+        options: >-
           --health-cmd="curl --silent --fail http://localhost:9000/minio/health/live || exit 1"
-          --health-interval=5s
-          --health-timeout=5s
-          --health-retries=3
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 3
         ports:
           - 127.0.0.1:9000:9000
     steps:

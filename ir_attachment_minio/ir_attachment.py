@@ -31,7 +31,7 @@ class IrAttachment(osv.osv):
         if context is None:
             context = {}
         ctx = context.copy()
-        if 'datas_fname' in vals:
+        if 'datas_fname' in vals and vals['datas_fname']:
             ctx['datas_minio_filename'] = slugify(
                 vals['datas_fname'], separator='.'
             )
@@ -46,7 +46,7 @@ class IrAttachment(osv.osv):
         ctx = context.copy()
         if 'datas' in vals:
             minioize(vals)
-        if 'datas_fname' in vals:
+        if 'datas_fname' in vals and vals['datas_fname']:
             ctx['datas_minio_filename'] = slugify(
                 vals['datas_fname'], separator='.'
             )

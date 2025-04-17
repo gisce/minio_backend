@@ -6,6 +6,7 @@ from io import BytesIO
 from .minio_backend import get_minio_client
 import magic
 from slugify import slugify
+from minio import error
 
 
 class S3File(fields.text):
@@ -88,16 +89,21 @@ class S3File(fields.text):
         res = self.get_oids(cursor, obj, ids, name)
         for rid, oid in res.items():
             if oid:
-                response = client.get_object(self.bucket, oid)
+                response = None
                 try:
+                    response = client.get_object(self.bucket, oid)
                     val = response.data
                     if context.get('bin_size', False) and val:
                         res[rid] = '%s' % human_size(val)
                     else:
                         res[rid] = base64.b64encode(val)
+                except error.NoSuchKey as e:
+                    print("Some one removed de file from minio but not in erp attatchment")
+                    res[rid] = False
                 finally:
-                    response.close()
-                    response.release_conn()
+                    if response is not None:
+                        response.close()
+                        response.release_conn()
             else:
                 res[rid] = False
         return res

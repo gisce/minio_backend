@@ -46,6 +46,28 @@ class MiniModelSlug(osv.osv):
 
 
 class TestMinioBackend(testing.OOTestCaseWithCursor):
+    def test_field_get_return_false_if_file_does_not_exist(self):
+        cursor = self.cursor
+        uid = self.uid
+        MiniModel()
+        osv.class_pool['minio.model'].createInstance(
+            self.openerp.pool, 'minio_backend', cursor
+        )
+        obj = self.openerp.pool.get('minio.model')
+        obj._auto_init(cursor)
+
+        content = b'TEST'
+
+        obj_id = obj.create(cursor, uid, {
+            'name': 'Foo',
+            'file': base64.b64encode(content)
+        })
+        path = 'minio_model/{}_file'.format(obj_id)
+        client = get_minio_client()
+        client.remove_object('test', path)
+        result = obj.read(cursor, uid, obj_id, ['file'])
+        self.assertEqual(result['file'], False)
+        self.assertEqual(obj._columns['file'].get(cursor, obj, [obj_id], 'minio_model'), {obj_id: False})
 
     def test_raises_exception_if_not_configured(self):
         from minio_backend.minio_backend import get_minio_client

@@ -11,7 +11,8 @@ Els mòduls Azure d'aquest repositori permeten guardar binaris de l'ERP en Azure
 
 ## Funcionament de l'aplicació
 
-- L'aplicació crea un client d'Azure amb `azure_connection_string`.
+- L'aplicació crea un client d'Azure segons el valor de `azure_auth_mode`.
+- Si no s'informa `azure_auth_mode`, s'usa `connection_string` per compatibilitat amb la configuració existent.
 - Quan s'escriu un fitxer, el mòdul puja un `BlockBlob` al contenidor configurat i desa a la base de dades la ruta del blob.
 - Quan es llegeix un fitxer, el mòdul descarrega el blob i retorna el contingut en base64.
 - Quan s'esborra un fitxer o un adjunt, el mòdul elimina el blob corresponent.
@@ -47,17 +48,21 @@ Per `ir_attachment_azure`, el contenidor per defecte és `attachments` i la subc
    - `attachments`, si s'usa `ir_attachment_azure` sense sobreescriure configuració,
    - qualsevol altre contenidor que s'hagi definit en camps `AzureBlobFile('...', '<container>')`.
 6. Configurar els contenidors amb nivell d'accés privat. No cal exposar URLs públiques per al funcionament del mòdul.
-7. Proporcionar una connection string vàlida amb accés de lectura, escriptura i esborrat sobre els blobs. Si els contenidors no es precreen, també ha de permetre crear-los. La implementació actual usa `BlobServiceClient.from_connection_string`, per tant no consumeix `tenant_id`, `client_id`, `client_secret`, Managed Identity ni SAS token directament.
-8. Desar la connection string en un gestor de secrets o en el mecanisme segur de configuració de l'entorn. No s'ha de versionar en cap repositori.
-9. Definir protecció de dades:
+7. Escollir el mode d'autenticació i proporcionar les credencials corresponents:
+   - `connection_string`: connection string del Storage Account.
+   - `sas_token`: URL del Blob Service amb SAS token amb permisos suficients.
+   - `app_registration`: App Registration d'Azure AD amb permisos RBAC sobre el Storage Account.
+8. Garantir que el mode escollit permet lectura, escriptura i esborrat de blobs. Si els contenidors no es precreen, també ha de permetre crear-los.
+9. Desar credencials, SAS tokens o secrets d'App Registration en un gestor de secrets o en el mecanisme segur de configuració de l'entorn. No s'han de versionar en cap repositori.
+10. Definir protecció de dades:
    - habilitar soft delete de blobs i contenidors si cal capacitat de recuperació,
    - valorar blob versioning segons política de retenció,
    - definir lifecycle management si cal moure dades antigues a tiers més econòmics o expirar-les.
-10. Activar monitoratge:
+11. Activar monitoratge:
     - diagnostic logs del Storage Account,
     - mètriques de disponibilitat, latència, errors i capacitat,
     - alertes per errors 4xx/5xx, throttling, creixement inesperat i expiració/rotació de claus.
-11. Documentar el pla de rotació de claus. Si es rota una clau del Storage Account, cal actualitzar `azure_connection_string` a l'ERP i reiniciar o recarregar el servei segons el mecanisme de configuració.
+12. Documentar el pla de rotació. Segons el mode, caldrà actualitzar la connection string, regenerar el SAS token o rotar el secret de l'App Registration i reiniciar o recarregar el servei segons el mecanisme de configuració.
 
 ## Normes de nomenclatura
 
@@ -70,7 +75,12 @@ Per `ir_attachment_azure`, el contenidor per defecte és `attachments` i la subc
 | Dada | Obligatori | Descripció |
 | --- | --- | --- |
 | Entorn | Sí | `dev`, `test`, `pre`, `prod` o el nom intern de l'entorn. |
-| `azure_connection_string` | Sí | Connection string del Storage Account amb endpoint de Blob i credencial vàlida. |
+| `azure_auth_mode` | No | Mode d'autenticació. Valors suportats: `connection_string`, `sas_token`, `app_registration`. Si no s'informa, s'usa `connection_string`. |
+| `azure_connection_string` | Sí en `connection_string` i `sas_token` | En mode `connection_string`, connection string del Storage Account. En mode `sas_token`, URL del Blob Service amb SAS token. |
+| `azure_connection_tenant_id` | Sí en `app_registration` | Tenant ID d'Azure AD. |
+| `azure_connection_client_id` | Sí en `app_registration` | Client ID de l'App Registration. |
+| `azure_connection_client_secret` | Sí en `app_registration` | Secret de l'App Registration. |
+| `azure_connection_account_url` | Sí en `app_registration` | URL del Blob Service, per exemple `https://<storage-account>.blob.core.windows.net`. |
 | `azure_bucket_attachment` | No | Nom del contenidor per `ir_attachment_azure`. Si no s'informa, s'usa `attachments`. |
 | Storage Account | Sí | Nom del Storage Account per identificar l'actiu i coordinar suport. |
 | Resource Group i subscripció | Sí | Ubicació administrativa del recurs Azure. |
@@ -83,6 +93,7 @@ Per `ir_attachment_azure`, el contenidor per defecte és `attachments` i la subc
 En entorns on la configuració es passa per variables d'entorn, les claus esperades segueixen la convenció de l'ERP:
 
 ```text
+OPENERP_AZURE_AUTH_MODE=connection_string
 OPENERP_AZURE_CONNECTION_STRING=<connection-string>
 OPENERP_AZURE_BUCKET_ATTACHMENT=attachments
 ```
@@ -90,8 +101,39 @@ OPENERP_AZURE_BUCKET_ATTACHMENT=attachments
 En fitxer de configuració, les claus són:
 
 ```ini
+azure_auth_mode = connection_string
 azure_connection_string = <connection-string>
 azure_bucket_attachment = attachments
+```
+
+Per mode SAS:
+
+```text
+OPENERP_AZURE_AUTH_MODE=sas_token
+OPENERP_AZURE_CONNECTION_STRING=https://<storage-account>.blob.core.windows.net?<sas-token>
+```
+
+```ini
+azure_auth_mode = sas_token
+azure_connection_string = https://<storage-account>.blob.core.windows.net?<sas-token>
+```
+
+Per mode App Registration:
+
+```text
+OPENERP_AZURE_AUTH_MODE=app_registration
+OPENERP_AZURE_CONNECTION_TENANT_ID=<tenant-id>
+OPENERP_AZURE_CONNECTION_CLIENT_ID=<client-id>
+OPENERP_AZURE_CONNECTION_CLIENT_SECRET=<client-secret>
+OPENERP_AZURE_CONNECTION_ACCOUNT_URL=https://<storage-account>.blob.core.windows.net
+```
+
+```ini
+azure_auth_mode = app_registration
+azure_connection_tenant_id = <tenant-id>
+azure_connection_client_id = <client-id>
+azure_connection_client_secret = <client-secret>
+azure_connection_account_url = https://<storage-account>.blob.core.windows.net
 ```
 
 ## Exemple local amb Azurite
@@ -117,8 +159,10 @@ Aquest exemple només és per desenvolupament o CI. En entorns reals s'ha d'usar
 
 ## Limitacions actuals
 
-- El mòdul només suporta connection string. Si es vol usar Managed Identity, Azure AD o SAS tokens amb permisos limitats, cal adaptar la implementació.
-- La connection string amb clau de compte dona accés ampli al Storage Account. Cal compensar-ho amb secret management, firewall, Private Endpoint i rotació de claus.
+- El mòdul suporta `connection_string`, `sas_token` i `app_registration`; no suporta Managed Identity.
+- El mode `connection_string` amb clau de compte dona accés ampli al Storage Account. Cal compensar-ho amb secret management, firewall, Private Endpoint i rotació de claus.
+- El mode `sas_token` redueix l'abast de la credencial, però exigeix gestionar-ne caducitat, permisos i rotació.
+- El mode `app_registration` evita claus de compte i SAS tokens, però requereix RBAC correcte sobre el Storage Account i rotació del `client_secret`.
 - El codi intenta crear contenidors automàticament. Si Infra vol que els contenidors siguin 100% governats per IaC, s'han de precrear i validar permisos abans de desplegar.
 - Si un blob s'esborra manualment a Azure però la base de dades conserva la ruta, la lectura pot fallar.
 - Els fitxers es processen en memòria com a base64. Cal validar límits funcionals si es preveuen adjunts grans.

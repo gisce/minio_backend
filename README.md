@@ -53,4 +53,4 @@ ExampleObject()
 
 ## Infra and configuration
 
-See [Azure module configuration](docs/azure.md) for the Azure Blob Storage infrastructure requirements and the ERP configuration values needed by these modules.
+See [Azure module configuration](docs/azure.md) for the Azure Blob Storage infrastructure requirements, supported authentication modes and ERP configuration values needed by these modules.

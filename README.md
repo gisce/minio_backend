@@ -50,3 +50,7 @@ ExampleObject()
 ## API
 
 `class AzureBlobFile(string, container_name)`
+
+## Infra and configuration
+
+See [Azure module configuration](docs/azure.md) for the Azure Blob Storage infrastructure requirements and the ERP configuration values needed by these modules.

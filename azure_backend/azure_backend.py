@@ -2,6 +2,9 @@ from __future__ import unicode_literals
 import logging
 
 logger = logging.getLogger('openerp.' + __name__)
+logging.getLogger(
+    'azure.core.pipeline.policies.http_logging_policy'
+).setLevel(logging.WARNING)
 
 VALID_MODES = {'connection_string', 'sas_token', 'app_registration'}
 

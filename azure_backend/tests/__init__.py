@@ -6,6 +6,7 @@ from azure_backend.fields import AzureBlobFile
 from azure_backend.azure_backend import get_azure_blob_client, get_object
 from azure.core.exceptions import ResourceNotFoundError
 import base64
+import logging
 from slugify import slugify
 
 
@@ -46,6 +47,12 @@ class AzureModelSlug(osv.osv):
 
 
 class TestAzureBackend(testing.OOTestCaseWithCursor):
+
+    def test_azure_http_info_logs_are_disabled(self):
+        azure_http_logger = logging.getLogger(
+            'azure.core.pipeline.policies.http_logging_policy'
+        )
+        self.assertEqual(azure_http_logger.level, logging.WARNING)
 
     def test_raises_exception_if_not_configured(self):
         from tools import config

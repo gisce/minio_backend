@@ -96,7 +96,7 @@ class S3File(fields.text):
                     if context.get('bin_size', False) and val:
                         res[rid] = '%s' % human_size(val)
                     else:
-                        res[rid] = base64.b64encode(val)
+                        res[rid] = base64.b64encode(val).decode('ascii')
                 except error.NoSuchKey as e:
                     print("Some one removed de file from minio but not in erp attatchment")
                     res[rid] = False

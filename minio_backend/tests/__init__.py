@@ -7,6 +7,7 @@ from minio_backend.minio_backend import get_minio_client
 from minio.error import NoSuchKey
 import base64
 from slugify import slugify
+import six
 
 
 class MiniModel(osv.osv):
@@ -96,7 +97,11 @@ class TestMinioBackend(testing.OOTestCaseWithCursor):
         })
 
         result = obj.read(cursor, uid, obj_id, ['file'])
-        self.assertEqual(result['file'], base64.b64encode(content))
+        self.assertEqual(
+            result['file'],
+            base64.b64encode(content).decode('ascii')
+        )
+        self.assertIsInstance(result['file'], six.string_types)
 
         path = 'minio_model/{}_file'.format(obj_id)
         client = get_minio_client()
@@ -124,7 +129,10 @@ class TestMinioBackend(testing.OOTestCaseWithCursor):
         })
 
         result = obj.read(cursor, uid, obj_id, ['file'])
-        self.assertEqual(result['file'], base64.b64encode(content))
+        self.assertEqual(
+            result['file'],
+            base64.b64encode(content).decode('ascii')
+        )
 
         path = 'minio_model_sub/{}/{}_file'.format(subfolder, obj_id)
         client = get_minio_client()

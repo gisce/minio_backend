@@ -94,5 +94,5 @@ class TestIrAttachmentMinio(testing.OOTestCaseWithCursor):
         attach = attach_obj.read(cursor, uid, attach_id, ['datas'])
         self.assertEqual(
             attach['datas'],
-            base64.b64encode(content)
+            base64.b64encode(content).decode('ascii')
         )
